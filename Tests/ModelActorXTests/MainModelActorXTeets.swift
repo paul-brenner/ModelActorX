@@ -1,30 +1,44 @@
+//
+//  ------------------------------------------------
+//  Original project: ModelActorX
+//  Created on 2024/10/30 by Fatbobman(东坡肘子)
+//  X: @fatbobman
+//  Mastodon: @fatbobman@mastodon.social
+//  GitHub: @fatbobman
+//  Blog: https://fatbobman.com
+//  ------------------------------------------------
+//  Copyright © 2024-present Fatbobman. All rights reserved.
+
 import Foundation
 @testable import ModelActorX
 import Testing
 
-struct ModelActorXTests {
-    @Test func example1() async throws {
+@MainActor
+struct MainModelActorXTests {
+    @Test
+    func test1() async throws {
         let container = createContainer()
-        let handler = DataHandler(modelContainer: container)
+        let handler = MainDataHandler(modelContainer: container)
         let now = Date.now
-        let id = try await handler.newItem(date: now)
-        let date = await handler.getTimestampFromItemID(id)
+        let id = try handler.newItem(date: now)
+        let date = handler.getTimestampFromItemID(id)
         #expect(date == now)
     }
 
-    @Test func example2() async throws {
+    @Test
+    func test2() async throws {
         let container = createContainer()
         let now = Date.now
-        let handler = DataHandler1(container: container, date: now)
-
-        let id = try await handler.newItem()
-        let date = await handler.getTimestampFromItemID(id)
+        let handler = MainDataHandler1(container: container, date: now)
+        let id = try handler.newItem()
+        let date = handler.getTimestampFromItemID(id)
         #expect(date == now)
     }
 }
 
-@ModelActorX
-actor DataHandler {
+@MainActor
+@MainModelActorX
+final class MainDataHandler {
     func newItem(date: Date) throws -> PersistentIdentifier {
         let item = Item(timestamp: date)
         modelContext.insert(item)
@@ -37,8 +51,9 @@ actor DataHandler {
     }
 }
 
-@ModelActorX(disableGenerateInit: true)
-actor DataHandler1 {
+@MainActor
+@MainModelActorX(disableGenerateInit: true)
+final class MainDataHandler1 {
     let date: Date
 
     func newItem() throws -> PersistentIdentifier {
@@ -55,7 +70,5 @@ actor DataHandler1 {
     init(container: ModelContainer, date: Date) {
         self.date = date
         modelContainer = container
-        let modelContext = ModelContext(modelContainer)
-        modelExecutor = DefaultSerialModelExecutor(modelContext: modelContext)
     }
 }

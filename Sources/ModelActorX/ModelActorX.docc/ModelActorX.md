@@ -127,6 +127,22 @@ final class MainDataHandler1 {
 }
 ```
 
+### Using ModelActorX with MainActor
+
+`@ModelActorX` also provides a constructor declared with `@MainActor`. When you use this constructor to generate an actor, it will directly utilize the `mainContext` (view context), and the entire actor will run on the main thread. The key difference from `@MainModelActorX` is that the type remains an `actor`. This means that existing code built upon ModelActor does not require modification—the calls will still retain `await`.
+
+This approach might be an ideal temporary solution before iOS 18 addresses the responsiveness issues related to updates using `@ModelActor`.
+
+```swift
+@ModelActorX
+actor DataHandler {}
+
+Task{ @MainActor in
+   let handler = DataHandler(mainContext: container.mainContext) // Use the view context for construction
+   await handler.updateItem(id: id) // Even on the main thread, you can still use `await`
+}
+```
+
 ## Testing Examples
 
 ### ModelActorXTests

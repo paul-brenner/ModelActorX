@@ -25,11 +25,18 @@ import SwiftSyntaxMacros
 ///       nonisolated let modelExecutor: any SwiftData.ModelExecutor
 ///       nonisolated let modelContainer: SwiftData.ModelContainer
 ///
-///       init(container: CoreData.NSPersistentContainer, mode: ActorContextMode = .newBackground) {
+///       init(container: CoreData.NSPersistentContainer) {
 ///         let modelContext = ModelContext(modelContainer)
 ///         self.modelExecutor = DefaultSerialModelExecutor(modelContext: modelContext)
 ///         self.modelContainer = modelContainer
 ///       }
+///
+///       @MainActor
+///       init(mainContext: SwiftData.ModelContext) {
+///         self.modelExecutor = DefaultSerialModelExecutor(modelContext: mainContext)
+///         self.modelContainer = mainContext.container
+///       }
+///
 ///     extension DataHandler: SwiftData.ModelActor {
 ///     }
 public enum ModelActorXMacro {}
@@ -79,6 +86,15 @@ extension ModelActorXMacro: MemberMacro {
                 self.modelContainer = modelContainer
             }
             """ : nil
-        return [decl] + (initializer.map { [$0] } ?? [])
+
+        let mainActorInitializer: DeclSyntax? = generateInitializer ?
+            """
+            @MainActor
+            \(raw: accessModifier)init(mainContext: SwiftData.ModelContext) {
+                self.modelExecutor = DefaultSerialModelExecutor(modelContext: mainContext)
+                self.modelContainer = mainContext.container
+            }
+            """ : nil
+        return [decl] + (initializer.map { [$0] } ?? []) + (mainActorInitializer.map { [$0] } ?? [])
     }
 }

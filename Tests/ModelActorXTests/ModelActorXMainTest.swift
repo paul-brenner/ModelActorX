@@ -8,7 +8,6 @@
 //  Blog: https://fatbobman.com
 //  ------------------------------------------------
 //  Copyright © 2024-present Fatbobman. All rights reserved.
-		
 
 import Foundation
 @testable import ModelActorX
@@ -18,9 +17,9 @@ import Testing
 struct ModelActorXMainTests {
     @Test func example1() async throws {
         let container = createContainer()
-        
+
         let handler = DataHandlerMain(mainContext: container.mainContext)
-       
+
         let now = Date.now
         let id = try await handler.newItem(date: now)
         let date = await handler.getTimestampFromItemID(id)
@@ -40,5 +39,10 @@ actor DataHandlerMain {
     func getTimestampFromItemID(_ itemID: PersistentIdentifier) -> Date? {
         return self[itemID, as: Item.self]?.timestamp
     }
-}
 
+    func updateItem(id: PersistentIdentifier, date: Date) {
+        guard let item = self[id, as: Item.self] else { return }
+        item.timestamp = date
+        try? modelContext.save()
+    }
+}
